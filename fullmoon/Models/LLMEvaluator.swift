@@ -98,7 +98,7 @@ class LLMEvaluator {
         cancelled = true
     }
 
-    func generate(modelName: String, thread: Thread, systemPrompt: String) async -> String {
+    func generate(modelName: String, messages: [Message]) async -> String {
         guard !running else { return "" }
 
         running = true
@@ -110,7 +110,7 @@ class LLMEvaluator {
             let modelContainer = try await load(modelName: modelName)
 
             // augment the prompt as needed
-            let promptHistory = modelContainer.configuration.getPromptHistory(thread: thread, systemPrompt: systemPrompt)
+            let promptHistory = messages.map(\.MLXMessage)
 
             if modelContainer.configuration.modelType == .reasoning {
                 isThinking = true

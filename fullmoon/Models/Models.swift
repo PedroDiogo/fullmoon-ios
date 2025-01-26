@@ -56,27 +56,6 @@ extension ModelConfiguration: @retroactive Equatable {
         }
     }
     
-    func getPromptHistory(thread: Thread, systemPrompt: String) -> [[String: String]] {
-        var history: [[String: String]] = []
-        
-        // system prompt
-        history.append([
-            "role": "system",
-            "content": systemPrompt
-        ])
-        
-        // messages
-        for message in thread.sortedMessages {
-            let role = message.role.rawValue
-            history.append([
-                "role": role,
-                "content": message.content
-            ])
-        }
-        
-        return history
-    }
-    
     /// Returns the model's approximate size, in GB.
     public var modelSize: Decimal? {
         switch self {

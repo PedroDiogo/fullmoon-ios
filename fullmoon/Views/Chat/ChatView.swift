@@ -265,7 +265,7 @@ struct ChatView: View {
         
         if !isPromptEmpty {
             if currentThread == nil {
-                let newThread = Thread()
+                let newThread = Thread(systemPrompt: appManager.systemPrompt)
                 currentThread = newThread
                 modelContext.insert(newThread)
                 try? modelContext.save()
@@ -279,15 +279,15 @@ struct ChatView: View {
                     appManager.playHaptic()
                     sendMessage(Message(role: .user, content: message, thread: currentThread))
                     
-                    if currentThread.title == nil {
-                        currentThread.title = await generateTitle(thread: currentThread)
-                    }
-                    
                     isPromptFocused = true
                     if let modelName = appManager.currentModelName {
-                        let output = await llm.generate(modelName: modelName, thread: currentThread, systemPrompt: appManager.systemPrompt)
+                        let output = await llm.generate(modelName: modelName, messages: currentThread.sortedMessages)
                         sendMessage(Message(role: .assistant, content: output, thread: currentThread, generatingTime: llm.thinkingTime))
                         generatingThreadID = nil
+                        
+                        if currentThread.title == nil {
+                            currentThread.title = await generateTitle(thread: currentThread, modelName: modelName)
+                        }
                     }
                 }
             }
@@ -311,8 +311,12 @@ struct ChatView: View {
     }
     #endif
     
-    private func generateTitle(thread: Thread) async -> String {
-        return thread.sortedMessages.first?.content ?? ""
+    private func generateTitle(thread: Thread, modelName: String) async -> String {
+        let messages = thread.sortedMessages +
+        [Message(role: Role.user, content: "Generate a simple title for the messages above in 2 to 5 words")]
+        return await llm.generate(modelName: modelName, messages: messages)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "\" ")) // Strip double quotes around the title. Some models tend to do this even when told not to
+            .localizedCapitalized
     }
 }
 

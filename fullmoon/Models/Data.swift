@@ -142,6 +142,13 @@ class Message {
     
     @Relationship(inverse: \Thread.messages) var thread: Thread?
     
+    var MLXMessage : [String:String]{
+        return [
+            "role": self.role.rawValue,
+            "content": content
+        ]
+    }
+    
     init(role: Role, content: String, thread: Thread? = nil, generatingTime: TimeInterval? = nil) {
         self.id = UUID()
         self.role = role
@@ -164,9 +171,12 @@ final class Thread: Sendable {
         return messages.sorted { $0.timestamp < $1.timestamp }
     }
     
-    init() {
+    init(systemPrompt: String? = nil) {
         self.id = UUID()
         self.timestamp = Date()
+        if let systemPrompt = systemPrompt {
+            self.messages = [Message(role: .system, content: systemPrompt)]
+        }
     }
 }
 

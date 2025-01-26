@@ -28,12 +28,12 @@ struct RequestLLMIntent: AppIntent {
         return nil
     }
     
-    var systemPrompt: String {
+    var systemMessage: Message? {
         if continuous {
-            return "\n you never reply with more than FOUR sentences even if asked to."
+            return Message(role: Role.system, content: "\n you never reply with more than FOUR sentences even if asked to.")
         }
         
-        return ""
+        return nil
     }
     
     let thread = Thread() // create a new thread for this intent
@@ -54,9 +54,13 @@ struct RequestLLMIntent: AppIntent {
         if let modelName = appManager.currentModelName {
             _ = try? await llm.load(modelName: modelName)
             
+            if thread.messages.isEmpty, let systemMessage = systemMessage {
+                thread.messages.append(systemMessage)
+            }
+            
             let message = Message(role: .user, content: prompt, thread: thread)
             thread.messages.append(message)
-            var output = await llm.generate(modelName: modelName, thread: thread, systemPrompt: appManager.systemPrompt + systemPrompt)
+            var output = await llm.generate(modelName: modelName, messages: thread.sortedMessages)
             
             let maxCharacters = maxCharacters ?? .max
             

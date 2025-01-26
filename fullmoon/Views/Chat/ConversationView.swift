@@ -83,7 +83,10 @@ struct MessageView: View {
     }
 
     var body: some View {
-        HStack {
+        if message.role == .system {
+            return EmptyView()
+        }
+        return HStack {
             if message.role == .user { Spacer() }
 
             if message.role == .assistant {

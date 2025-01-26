@@ -17,10 +17,15 @@ struct ChatListRowView: View {
     var body: some View {
         VStack(alignment: .leading) {
             ZStack {
-                if isRenaming {
-                    EditTitleTextField
+                if let title = thread.title {
+                    if isRenaming {
+                        EditTitleTextField
+                    } else {
+                        Text(title).lineLimit(1)
+                    }
                 } else {
-                    Text(thread.title ?? "untitled").lineLimit(1)
+                    ProgressView()
+                        .controlSize(.small)
                 }
             }
             .foregroundStyle(.primary)
